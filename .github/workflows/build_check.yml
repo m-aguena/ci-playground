@@ -1,0 +1,40 @@
+name: Build and Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  CONDA_ENV_NAME: my_env
+
+
+jobs:
+
+
+  code-vers-valid:
+    name: Version Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Confirm gh CLI is installed
+        run: gh --version
+      - name: Trigger CI on current branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current_branch="${GITHUB_REF_NAME}"
+          echo "Triggering check_version.yml on current branch: $current_branch"
+          gh workflow run check_version.yml \
+            -f branch="$current_branch"
+
+
+  other-valid:
+    name: Other validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Auto passing
+        run: echo "[ok]"

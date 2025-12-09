@@ -8,32 +8,28 @@ jobs:
   rerun-pr-ci:
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write     # required for PATCH /pulls/{n}
       contents: read
+      actions: write
+      pull-requests: read
 
     steps:
       - name: List open pull requests
         id: prs
         run: |
           prs=$(gh api repos/${{ github.repository }}/pulls \
-            --jq '[.[] | {number: .number, title: .title}]')
+            --jq '[.[] | {number: .number, head_ref: .head.ref}]')
           echo "prs=$(echo "$prs" | jq -c '.')" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Touch PR metadata to retrigger PR CI
+      - name: Trigger workflow_dispatch on PR branches
         run: |
-          echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' |
-          while read pr; do
-            number=$(echo "$pr" | jq -r '.number')
-            title=$(echo "$pr" | jq -r '.title')
-
-            echo "Touching PR #$number to retrigger CI"
-
-            gh api \
-              -X PATCH \
-              repos/${{ github.repository }}/pulls/${number} \
-              -F title="$title"
+          echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' | while read pr; do
+            branch=$(echo "$pr" | jq -r '.head_ref')
+            echo "Dispatching workflow on branch $branch"
+            gh workflow run check_version.yml \
+              -R ${{ github.repository }} \
+              -F ref="$branch"
           done
         env:
           GH_TOKEN: ${{ github.token }}

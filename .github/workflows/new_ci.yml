@@ -8,31 +8,32 @@ jobs:
   rerun-pr-ci:
     runs-on: ubuntu-latest
     permissions:
-      contents: write         # required
-      pull-requests: write    # required
-      actions: write
+      pull-requests: write     # required for PATCH /pulls/{n}
+      contents: read
 
     steps:
       - name: List open pull requests
         id: prs
         run: |
           prs=$(gh api repos/${{ github.repository }}/pulls \
-            --jq '[.[] | {number: .number}]')
+            --jq '[.[] | {number: .number, title: .title}]')
           echo "prs=$(echo "$prs" | jq -c '.')" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Trigger PR CI by updating base branch
+      - name: Touch PR metadata to retrigger PR CI
         run: |
           echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' |
           while read pr; do
             number=$(echo "$pr" | jq -r '.number')
-            echo "Updating PR #$number to retrigger CI"
+            title=$(echo "$pr" | jq -r '.title')
+
+            echo "Touching PR #$number to retrigger CI"
 
             gh api \
-              -X POST \
-              repos/${{ github.repository }}/pulls/$number/update-branch \
-              || echo "PR #$number does not allow auto-update"
+              -X PATCH \
+              repos/${{ github.repository }}/pulls/${number} \
+              -F title="$title"
           done
         env:
           GH_TOKEN: ${{ github.token }}

@@ -8,9 +8,6 @@ env:
   PR_NUMBER: ${{ github.event.pull_request.number }}
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:

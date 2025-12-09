@@ -18,14 +18,14 @@ jobs:
         id: prs
         run: |
           prs=$(gh api repos/${{ github.repository }}/pulls \
-            --jq '.[] | {number: .number, ref: .head.ref}')
-          echo "prs=$prs" >> $GITHUB_OUTPUT
+            --jq '[.[] | {number: .number, ref: .head.ref}]')   # wrap in array
+          echo "prs=$(echo "$prs" | jq -c '.')" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
       - name: Trigger CI workflow for each PR
         run: |
-          echo "${{ steps.prs.outputs.prs }}" | jq -c '.[]' | while read pr; do
+          echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' | while read pr; do
             number=$(echo "$pr" | jq -r '.number')
             ref=$(echo "$pr" | jq -r '.ref')
 
@@ -36,4 +36,3 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ github.token }}
-

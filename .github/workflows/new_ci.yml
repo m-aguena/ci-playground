@@ -1,0 +1,39 @@
+name: Rerun PR CI on main changes
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  rerun-pr-ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: write   # needed to dispatch workflows
+      checks: write
+
+    steps:
+      - name: List open pull requests
+        id: prs
+        run: |
+          prs=$(gh api repos/${{ github.repository }}/pulls \
+            --jq '.[] | {number: .number, ref: .head.ref}')
+          echo "prs=$prs" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Trigger CI workflow for each PR
+        run: |
+          echo "${{ steps.prs.outputs.prs }}" | jq -c '.[]' | while read pr; do
+            number=$(echo "$pr" | jq -r '.number')
+            ref=$(echo "$pr" | jq -r '.ref')
+
+            echo "Triggering PR #$number (ref: $ref)"
+
+            gh api repos/${{ github.repository }}/actions/workflows/check_version.yml/dispatches \
+              -X POST -F ref="$ref"
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
+

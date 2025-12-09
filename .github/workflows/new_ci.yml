@@ -80,18 +80,18 @@ jobs:
             exit 1
           fi
           echo "Version format is ok"
-      # Get cluster_structure version
-      - name: Checkout the cluster_structure branch to get its version
+      # Get main.g version
+      - name: Checkout the main.g branch to get its version
         uses: actions/checkout@v4
         with:
-          ref: cluster_structure
-      - name: Get version from cluster_structure branch
-        id: cluster_structure_version
+          ref: main.g
+      - name: Get version from main.g branch
+        id: main.g_version
         run: |
-          if [[ "$(git show origin/cluster_structure:cloelib/observables/clusters/__init__.py)" == *"__version__"* ]]; then
-            MAIN_VERSION="$(grep -oP '__version__ = "\K[^"]+' cloelib/observables/clusters/__init__.py)"
+          if [[ "$(git show origin/main.g:my_repo/__init__.py)" == *"__version__"* ]]; then
+            MAIN_VERSION="$(grep -oP '__version__ = "\K[^"]+' my_repo/__init__.py)"
           else
-            echo "No version found at cluster_structure, assuming version 0.0.0"
+            echo "No version found at main.g, assuming version 0.0.0"
             MAIN_VERSION="0.0.0"
           fi
           echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_ENV
@@ -128,7 +128,7 @@ jobs:
               ERROR="  - Increments should be done by 1: $GOAL"
             fi
           else
-            ERROR="  - Version at cloelib/observables/clusters/__init__.py has not been updated!"
+            ERROR="  - Version at my_repo/__init__.py has not been updated!"
           fi
           if [ "$ERROR" != "" ]; then
             echo "Check failed:"

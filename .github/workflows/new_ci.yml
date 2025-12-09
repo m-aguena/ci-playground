@@ -80,18 +80,18 @@ jobs:
             exit 1
           fi
           echo "Version format is ok"
-      # Get main.g version
-      - name: Checkout the main.g branch to get its version
+      # Get main version
+      - name: Checkout the main branch to get its version
         uses: actions/checkout@v4
         with:
-          ref: main.g
-      - name: Get version from main.g branch
-        id: main.g_version
+          ref: main
+      - name: Get version from main branch
+        id: main_version
         run: |
-          if [[ "$(git show origin/main.g:my_repo/__init__.py)" == *"__version__"* ]]; then
+          if [[ "$(git show origin/main:my_repo/__init__.py)" == *"__version__"* ]]; then
             MAIN_VERSION="$(grep -oP '__version__ = "\K[^"]+' my_repo/__init__.py)"
           else
-            echo "No version found at main.g, assuming version 0.0.0"
+            echo "No version found at main, assuming version 0.0.0"
             MAIN_VERSION="0.0.0"
           fi
           echo "MAIN_VERSION=$MAIN_VERSION" >> $GITHUB_ENV

@@ -34,7 +34,7 @@ jobs:
             echo "Dispatching workflow on branch $branch"
             gh workflow run check_version.yml \
               -R ${{ github.repository }} \
-              -F ref="$branch"
+              --ref="$branch"
           done
         env:
           GH_TOKEN: ${{ github.token }}

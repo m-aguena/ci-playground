@@ -9,30 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
       pull-requests: read
-      actions: write   # needed to dispatch workflows
-      checks: write
 
     steps:
       - name: List open pull requests
         id: prs
         run: |
           prs=$(gh api repos/${{ github.repository }}/pulls \
-            --jq '[.[] | {number: .number, ref: .head.ref}]')   # wrap in array
+            --jq '[.[] | {number: .number, head_ref: .head.ref}]')
           echo "prs=$(echo "$prs" | jq -c '.')" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
-      - name: Trigger CI workflow for each PR
+      - name: Trigger workflow_dispatch on PR branches
         run: |
           echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' | while read pr; do
-            number=$(echo "$pr" | jq -r '.number')
-            ref=$(echo "$pr" | jq -r '.ref')
-
-            echo "Triggering PR #$number (ref: $ref)"
-
-            gh api repos/${{ github.repository }}/actions/workflows/check_version.yml/dispatches \
-              -X POST -F ref="$ref"
+            branch=$(echo "$pr" | jq -r '.head_ref')
+            echo "Dispatching workflow on branch $branch"
+            gh workflow run check_version.yml \
+              -R ${{ github.repository }} \
+              -F ref="$branch"
           done
         env:
           GH_TOKEN: ${{ github.token }}
+

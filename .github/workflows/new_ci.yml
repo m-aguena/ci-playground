@@ -25,6 +25,8 @@ jobs:
       - name: List WF
         run: |
           gh workflow list -R ${{ github.repository }}
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Trigger workflow_dispatch on PR branches
         run: |
           echo '${{ steps.prs.outputs.prs }}' | jq -c '.[]' | while read pr; do
@@ -32,7 +34,7 @@ jobs:
             echo "Dispatching workflow on branch $branch"
             gh workflow run check_version.yml \
               -R ${{ github.repository }} \
-              -F ref="$branch"
+              --ref="$branch"
           done
         env:
           GH_TOKEN: ${{ github.token }}

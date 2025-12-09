@@ -1,5 +1,12 @@
 name: Check Code Version
 
+permissions:
+  pull-requests: write
+
+env:
+  REPO: ${{ github.repository }}
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+
 on:
   push:
     branches:
@@ -125,10 +132,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Use the GitHub API to update the PR title
           echo "Updating PR #$PR_NUMBER with new title: $NEW_TITLE"
           curl -s -X PATCH \
-            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github.v3+json" \
             -d "{\"title\":\"$NEW_TITLE\"}" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" > /dev/null
+            "https://api.github.com/repos/$REPO/pulls/$PR_NUMBER"
